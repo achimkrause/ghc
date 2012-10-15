@@ -394,12 +394,18 @@ tcExpr (ExplicitTuple tup_args boxity) res_ty
        
        ; return $ mkHsWrapCo coi (ExplicitTuple tup_args1 boxity) }
 
-tcExpr (ExplicitList _ exprs) res_ty
-  = do 	{ (coi, elt_ty) <- matchExpectedListTy res_ty
-	; exprs' <- mapM (tc_elt elt_ty) exprs
-	; return $ mkHsWrapCo coi (ExplicitList elt_ty exprs') }
-  where
-    tc_elt elt_ty expr = tcPolyExpr expr elt_ty
+tcExpr (ExplicitList _ witness exprs) res_ty   
+  = case witness of
+      Nothing   -> do  { (coi, elt_ty) <- matchExpectedListTy res_ty
+                       ; exprs' <- mapM (tc_elt elt_ty) exprs                       
+                       ; return $ mkHsWrapCo coi (ExplicitList elt_ty Nothing exprs') }
+
+      Just fln -> do  { list_ty <- newFlexiTyVarTy liftedTypeKind
+                     ; fln' <- tcSyntaxOp ListOrigin fln (mkFunTys [intTy, list_ty] res_ty)
+                     ; (coi, elt_ty) <- matchExpectedListTy list_ty
+                     ; exprs' <- mapM (tc_elt elt_ty) exprs
+                     ; return $ mkHsWrapCo coi (ExplicitList elt_ty (Just fln') exprs') }
+     where tc_elt elt_ty expr = tcPolyExpr expr elt_ty          
 
 tcExpr (ExplicitPArr _ exprs) res_ty	-- maybe empty
   = do	{ (coi, elt_ty) <- matchExpectedPArrTy res_ty
@@ -750,40 +756,76 @@ tcExpr (RecordUpd record_expr rbinds _ _ _) res_ty
 %************************************************************************
 
 \begin{code}
-tcExpr (ArithSeq _ seq@(From expr)) res_ty
-  = do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
+tcExpr (ArithSeq _ witness seq@(From expr)) res_ty
+  = case witness of
+     Nothing -> do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
 	; expr' <- tcPolyExpr expr elt_ty
 	; enum_from <- newMethodFromName (ArithSeqOrigin seq) 
 			      enumFromName elt_ty 
-	; return $ mkHsWrapCo coi (ArithSeq enum_from (From expr')) }
+	; return $ mkHsWrapCo coi (ArithSeq enum_from Nothing (From expr')) }
+     
+     Just fl -> do      { list_ty <- newFlexiTyVarTy liftedTypeKind
+        ; fl' <- tcSyntaxOp ListOrigin fl (mkFunTy list_ty res_ty)
+        ; (coi, elt_ty) <- matchExpectedListTy list_ty
+        ; expr' <- tcPolyExpr expr elt_ty
+        ; enum_from <- newMethodFromName (ArithSeqOrigin seq)
+                              enumFromName elt_ty
+        ; return $ mkHsWrapCo coi (ArithSeq enum_from (Just fl') (From expr')) }
+      
 
-tcExpr (ArithSeq _ seq@(FromThen expr1 expr2)) res_ty
-  = do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
+tcExpr (ArithSeq _ witness seq@(FromThen expr1 expr2)) res_ty
+  = case witness of
+     Nothing -> do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
 	; expr1' <- tcPolyExpr expr1 elt_ty
 	; expr2' <- tcPolyExpr expr2 elt_ty
 	; enum_from_then <- newMethodFromName (ArithSeqOrigin seq) 
 			      enumFromThenName elt_ty 
-	; return $ mkHsWrapCo coi 
-                    (ArithSeq enum_from_then (FromThen expr1' expr2')) }
+	; return $ mkHsWrapCo coi (ArithSeq enum_from_then Nothing (FromThen expr1' expr2')) }
+     
+     Just fl -> do      { list_ty <- newFlexiTyVarTy liftedTypeKind
+        ; fl' <- tcSyntaxOp ListOrigin fl (mkFunTy list_ty res_ty)
+        ; (coi, elt_ty) <- matchExpectedListTy list_ty
+        ; expr1' <- tcPolyExpr expr1 elt_ty
+        ; expr2' <- tcPolyExpr expr2 elt_ty
+        ; enum_from_then <- newMethodFromName (ArithSeqOrigin seq) 
+			      enumFromThenName elt_ty
+        ; return $ mkHsWrapCo coi (ArithSeq enum_from_then (Just fl') (FromThen expr1' expr2')) }
 
-tcExpr (ArithSeq _ seq@(FromTo expr1 expr2)) res_ty
-  = do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
+tcExpr (ArithSeq _ witness seq@(FromTo expr1 expr2)) res_ty
+  = case witness of
+     Nothing -> do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
 	; expr1' <- tcPolyExpr expr1 elt_ty
 	; expr2' <- tcPolyExpr expr2 elt_ty
 	; enum_from_to <- newMethodFromName (ArithSeqOrigin seq) 
-		  	      enumFromToName elt_ty 
-	; return $ mkHsWrapCo coi 
-                     (ArithSeq enum_from_to (FromTo expr1' expr2')) }
+			      enumFromToName elt_ty 
+	; return $ mkHsWrapCo coi (ArithSeq enum_from_to Nothing (FromTo expr1' expr2')) }     
+     Just fl -> do      { list_ty <- newFlexiTyVarTy liftedTypeKind
+        ; fl' <- tcSyntaxOp ListOrigin fl (mkFunTy list_ty res_ty)
+        ; (coi, elt_ty) <- matchExpectedListTy list_ty
+        ; expr1' <- tcPolyExpr expr1 elt_ty
+        ; expr2' <- tcPolyExpr expr2 elt_ty
+        ; enum_from_to <- newMethodFromName (ArithSeqOrigin seq) 
+			      enumFromToName elt_ty
+        ; return $ mkHsWrapCo coi (ArithSeq enum_from_to (Just fl') (FromTo expr1' expr2')) }
 
-tcExpr (ArithSeq _ seq@(FromThenTo expr1 expr2 expr3)) res_ty
-  = do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
+tcExpr (ArithSeq _ witness seq@(FromThenTo expr1 expr2 expr3)) res_ty
+  = case witness of
+     Nothing -> do	{ (coi, elt_ty) <- matchExpectedListTy res_ty
 	; expr1' <- tcPolyExpr expr1 elt_ty
 	; expr2' <- tcPolyExpr expr2 elt_ty
 	; expr3' <- tcPolyExpr expr3 elt_ty
 	; eft <- newMethodFromName (ArithSeqOrigin seq) 
-		      enumFromThenToName elt_ty 
-	; return $ mkHsWrapCo coi 
-                     (ArithSeq eft (FromThenTo expr1' expr2' expr3')) }
+			      enumFromThenToName elt_ty 
+	; return $ mkHsWrapCo coi (ArithSeq eft Nothing (FromThenTo expr1' expr2' expr3')) }     
+     Just fl -> do      { list_ty <- newFlexiTyVarTy liftedTypeKind
+        ; fl' <- tcSyntaxOp ListOrigin fl (mkFunTy list_ty res_ty)
+        ; (coi, elt_ty) <- matchExpectedListTy list_ty
+        ; expr1' <- tcPolyExpr expr1 elt_ty
+        ; expr2' <- tcPolyExpr expr2 elt_ty
+        ; expr3' <- tcPolyExpr expr3 elt_ty
+        ; eft <- newMethodFromName (ArithSeqOrigin seq) 
+			      enumFromThenToName elt_ty
+        ; return $ mkHsWrapCo coi (ArithSeq eft (Just fl') (FromThenTo expr1' expr2' expr3')) }
 
 tcExpr (PArrSeq _ seq@(FromTo expr1 expr2)) res_ty
   = do	{ (coi, elt_ty) <- matchExpectedPArrTy res_ty

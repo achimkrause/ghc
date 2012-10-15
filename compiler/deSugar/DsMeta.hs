@@ -935,7 +935,7 @@ repE e@(HsDo ctxt sts _)
   | otherwise
   = notHandled "mdo, monad comprehension and [: :]" (ppr e)
 
-repE (ExplicitList _ es) = do { xs <- repLEs es; repListExp xs }
+repE (ExplicitList _ _ es) = do { xs <- repLEs es; repListExp xs }
 repE e@(ExplicitPArr _ _) = notHandled "Parallel arrays" (ppr e)
 repE e@(ExplicitTuple es boxed)
   | not (all tupArgPresent es) = notHandled "Tuple sections" (ppr e)
@@ -952,7 +952,7 @@ repE (RecordUpd e flds _ _ _)
         repRecUpd x fs }
 
 repE (ExprWithTySig e ty) = do { e1 <- repLE e; t1 <- repLTy ty; repSigExp e1 t1 }
-repE (ArithSeq _ aseq) =
+repE (ArithSeq _ _ aseq) =
   case aseq of
     From e              -> do { ds1 <- repLE e; repFrom ds1 }
     FromThen e1 e2      -> do

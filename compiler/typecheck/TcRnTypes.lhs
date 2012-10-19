@@ -1516,6 +1516,7 @@ data CtOrigin
   | AnnOrigin           -- An annotation
   | FunDepOrigin
   | HoleOrigin
+  | ListOrigin          -- An overloaded list
 
 pprO :: CtOrigin -> SDoc
 pprO (GivenOrigin sk)      = ppr sk
@@ -1548,6 +1549,7 @@ pprO (KindEqOrigin t1 t2 _) = ptext (sLit "a kind equality arising from") <+> se
 pprO AnnOrigin             = ptext (sLit "an annotation")
 pprO FunDepOrigin          = ptext (sLit "a functional dependency")
 pprO HoleOrigin            = ptext (sLit "a use of the hole") <+> quotes (ptext $ sLit "_")
+pprO ListOrigin            = ptext (sLit "an overloaded list")
 
 instance Outputable CtOrigin where
   ppr = pprO

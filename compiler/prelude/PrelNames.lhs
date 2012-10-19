@@ -232,7 +232,12 @@ basicKnownKeyNames
         -- Strings and lists
         unpackCStringName,
         unpackCStringFoldrName, unpackCStringUtf8Name,
-
+        
+        -- Overloaded lists
+        fromListClassName,
+        fromListName,
+        fromListNName,
+        
         -- List operations
         concatName, filterName, mapName,
         zipName, foldrName, buildName, augmentName, appendName,
@@ -562,6 +567,10 @@ plus_RDR                = varQual_RDR gHC_NUM (fsLit "+")
 
 fromString_RDR :: RdrName
 fromString_RDR          = nameRdrName fromStringName
+
+fromList_RDR, fromListN_RDR :: RdrName
+fromList_RDR = nameRdrName fromListName
+fromListN_RDR = nameRdrName fromListNName
 
 compose_RDR :: RdrName
 compose_RDR             = varQual_RDR gHC_BASE (fsLit ".")
@@ -977,6 +986,12 @@ concatName, filterName, zipName :: Name
 concatName        = varQual gHC_LIST (fsLit "concat") concatIdKey
 filterName        = varQual gHC_LIST (fsLit "filter") filterIdKey
 zipName           = varQual gHC_LIST (fsLit "zip") zipIdKey
+
+-- Overloaded lists
+fromListClassName, fromListName, fromListNName :: Name
+fromListClassName = clsQual gHC_EXTS (fsLit "FromList") fromListClassKey
+fromListName = methName gHC_EXTS (fsLit "fromList") fromListClassOpKey
+fromListNName = methName gHC_EXTS (fsLit "fromListN") fromListNClassOpKey
 
 -- Class Show
 showClassName :: Name
@@ -1697,6 +1712,11 @@ mzipIdKey       = mkPreludeMiscIdUnique 196
 ghciStepIoMClassOpKey :: Unique
 ghciStepIoMClassOpKey = mkPreludeMiscIdUnique 197
 
+-- Overloaded lists
+fromListClassKey, fromListClassOpKey, fromListNClassOpKey :: Unique
+fromListClassKey = mkPreludeMiscIdUnique 198
+fromListClassOpKey = mkPreludeMiscIdUnique 199
+fromListNClassOpKey = mkPreludeMiscIdUnique 500
 
 ---------------- Template Haskell -------------------
 --      USES IdUniques 200-499

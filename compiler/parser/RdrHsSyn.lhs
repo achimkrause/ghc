@@ -599,8 +599,8 @@ checkAPat dynflags loc e0 = case e0 of
                                _ -> patFail loc e0
 
    HsPar e            -> checkLPat e >>= (return . ParPat)
-   ExplicitList _ es  -> do ps <- mapM checkLPat es
-                            return (ListPat ps placeHolderType)
+   ExplicitList _ _ es  -> do ps <- mapM checkLPat es
+                              return (ListPat ps placeHolderType)
    ExplicitPArr _ es  -> do ps <- mapM checkLPat es
                             return (PArrPat ps placeHolderType)
 

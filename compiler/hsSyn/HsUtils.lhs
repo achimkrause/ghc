@@ -344,7 +344,7 @@ nlHsLam	match		= noLoc (HsLam (mkMatchGroup [match]))
 nlHsPar e		= noLoc (HsPar e)
 nlHsIf cond true false	= noLoc (mkHsIf cond true false)
 nlHsCase expr matches	= noLoc (HsCase expr (mkMatchGroup matches))
-nlList exprs		= noLoc (ExplicitList placeHolderType exprs)
+nlList exprs		= noLoc (ExplicitList placeHolderType Nothing exprs)
 
 nlHsAppTy :: LHsType name -> LHsType name -> LHsType name
 nlHsTyVar :: name                         -> LHsType name

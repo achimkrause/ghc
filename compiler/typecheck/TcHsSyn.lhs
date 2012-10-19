@@ -646,10 +646,14 @@ zonkExpr env (HsDo do_or_lc stmts ty)
     zonkTcTypeToType env ty             `thenM` \ new_ty   ->
     returnM (HsDo do_or_lc new_stmts new_ty)
 
-zonkExpr env (ExplicitList ty exprs)
+zonkExpr env (ExplicitList ty wit exprs)
   = zonkTcTypeToType env ty	`thenM` \ new_ty ->
+    zonkWit env wit             `thenM` \ new_wit ->
     zonkLExprs env exprs	`thenM` \ new_exprs ->
-    returnM (ExplicitList new_ty new_exprs)
+    returnM (ExplicitList new_ty new_wit new_exprs)
+   where zonkWit _ Nothing = returnM Nothing
+         zonkWit env (Just fln) = zonkExpr env fln `thenM` \ new_fln ->
+                                  returnM (Just new_fln)
 
 zonkExpr env (ExplicitPArr ty exprs)
   = zonkTcTypeToType env ty	`thenM` \ new_ty ->
@@ -674,10 +678,14 @@ zonkExpr env (ExprWithTySigOut e ty)
 
 zonkExpr _ (ExprWithTySig _ _) = panic "zonkExpr env:ExprWithTySig"
 
-zonkExpr env (ArithSeq expr info)
+zonkExpr env (ArithSeq expr wit info)
   = zonkExpr env expr		`thenM` \ new_expr ->
+    zonkWit env wit             `thenM` \ new_wit  ->
     zonkArithSeq env info	`thenM` \ new_info ->
-    returnM (ArithSeq new_expr new_info)
+    returnM (ArithSeq new_expr new_wit new_info)
+   where zonkWit _ Nothing = returnM Nothing
+         zonkWit env (Just fln) = zonkExpr env fln `thenM` \ new_fln ->
+                                  returnM (Just new_fln)
 
 zonkExpr env (PArrSeq expr info)
   = zonkExpr env expr		`thenM` \ new_expr ->

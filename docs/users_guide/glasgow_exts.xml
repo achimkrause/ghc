@@ -4642,7 +4642,7 @@ constructs the structure <literal>l</literal> from the given list of
 input list's length as a hint. Its behaviour should be equivalent to
 <literal>fromList</literal>. The hint can be used for more efficient
 construction of the structure <literal>l</literal> compared to
-<literal>fromList</literal>. If the given hint does not equal to the input
+<literal>fromList</literal>. If the given hint is not equal to the input
 list's length the behaviour of <literal>fromListN</literal> is not
 specified.</para>
 

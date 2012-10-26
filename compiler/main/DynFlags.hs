@@ -66,6 +66,7 @@ module DynFlags (
 
         -- ** Manipulating DynFlags
         defaultDynFlags,                -- Settings -> DynFlags
+        defaultWays,
         initDynFlags,                   -- DynFlags -> IO DynFlags
         defaultFatalMessager,
         defaultLogAction,
@@ -1184,9 +1185,9 @@ defaultDynFlags mySettings =
         packageFlags            = [],
         pkgDatabase             = Nothing,
         pkgState                = panic "no package state yet: call GHC.setSessionDynFlags",
-        ways                    = [],
-        buildTag                = mkBuildTag [],
-        rtsBuildTag             = mkBuildTag [],
+        ways                    = defaultWays mySettings,
+        buildTag                = mkBuildTag (defaultWays mySettings),
+        rtsBuildTag             = mkBuildTag (defaultWays mySettings),
         splitInfo               = Nothing,
         settings                = mySettings,
         -- ghc -M values
@@ -1240,6 +1241,11 @@ defaultDynFlags mySettings =
         llvmVersion = panic "defaultDynFlags: No llvmVersion",
         interactivePrint = Nothing
       }
+
+defaultWays :: Settings -> [Way]
+defaultWays settings = if pc_dYNAMIC_BY_DEFAULT (sPlatformConstants settings)
+                       then [WayDyn]
+                       else []
 
 --------------------------------------------------------------------------
 
